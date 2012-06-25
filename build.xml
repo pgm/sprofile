@@ -1,0 +1,17 @@
+<project name="sprofile" default="jar">
+
+	<target name="compile" description="Compiles code, output goes to out/classes">
+	    <mkdir dir="out/classes" />
+	    <javac srcdir="src" destdir="out/classes" debug="true" source="1.5" includes="**/*.java"/>
+	</target>
+
+	<target name="jar" description="Build the jar." depends="compile">
+	    <jar destfile="out/dist/sprofile.jar" basedir="out/classes" includes="**/*.class" index="no">
+	        <manifest>
+	            <attribute name="Main-Class" value="org.github.sprofile.WatchAndAttach"/>
+	            <attribute name="Agent-Class" value="org.github.sprofile.Profiler"/>
+	        </manifest>
+	    </jar>
+	</target>
+
+</project>
