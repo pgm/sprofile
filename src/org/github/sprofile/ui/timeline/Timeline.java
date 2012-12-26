@@ -1,4 +1,4 @@
-package org.github.sprofile.ui;
+package org.github.sprofile.ui.timeline;
 
 import org.github.sprofile.Context;
 
@@ -30,8 +30,8 @@ public class Timeline {
         int maxTraceDepth = 0;
         int maxContextDepth = 0;
         for (int i = 0; i < getSampleCount(); i++) {
-            maxTraceDepth = Math.max(this.traces[i].length, maxTraceDepth);
-            maxContextDepth = Math.max(this.contexts[i].getDepth(), maxContextDepth);
+            maxTraceDepth = Math.max(getTraceDepth(i), maxTraceDepth);
+            maxContextDepth = Math.max(getContextDepth(i), maxContextDepth);
         }
         this.maxTraceDepth = maxTraceDepth;
         this.maxContextDepth = maxContextDepth;
@@ -66,12 +66,25 @@ public class Timeline {
         return maxContextDepth;
     }
 
+    public Context getContext(int index) {
+        return contexts[index];
+    }
+
+    public StackTraceElement[] getTrace(int index) {
+        return traces[index];
+    }
+
     public int getContextDepth(int index) {
-        return contexts[index].getDepth();
+        if (contexts[index] != null)
+            return contexts[index].getDepth();
+        return 0;
     }
 
     public int getTraceDepth(int index) {
-        return traces[index].length;
+        if (traces[index] != null) {
+            return traces[index].length;
+        }
+        return 0;
     }
 
     public int getSelectionStart() {

@@ -1,15 +1,10 @@
 package org.github.sprofile.io;
 
-/**
- * Created with IntelliJ IDEA.
- * User: pgm
- * Date: 12/22/12
- * Time: 5:44 PM
- * To change this template use File | Settings | File Templates.
- */
+import org.github.sprofile.Context;
+
 public interface ObservationListener {
     public void observe(long timestamp, long threadId, String threadName,
-                        Thread.State threadState, StackTraceElement[] trace);
+                        Thread.State threadState, StackTraceElement[] trace, Context context);
 
     public void collectionTime(int milliseconds);
 }

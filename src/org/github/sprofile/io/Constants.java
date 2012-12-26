@@ -1,12 +1,5 @@
 package org.github.sprofile.io;
 
-/**
- * Created with IntelliJ IDEA.
- * User: pgm
- * Date: 12/22/12
- * Time: 5:47 PM
- * To change this template use File | Settings | File Templates.
- */
 public class Constants {
     public static final int NEW_TRACE_ELEMENT = 1;
     public static final int NEW_TRACE = 2;

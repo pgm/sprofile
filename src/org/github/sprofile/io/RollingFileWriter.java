@@ -1,25 +1,18 @@
 package org.github.sprofile.io;
 
-import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import org.github.sprofile.Context;
+
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
-/**
- * Created with IntelliJ IDEA.
- * User: pgm
- * Date: 12/22/12
- * Time: 6:01 PM
- * To change this template use File | Settings | File Templates.
- */
-public class RollingFileWriter {
+public class RollingFileWriter implements Writer {
     final int fileLengthThreshold;
     final String filenamePrefix;
     final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
 
-    Writer writer;
+    SnapshotStreamWriter writer;
     DataOutputStream out;
 
     public RollingFileWriter(int fileLengthThreshold, String filenamePrefix) {
@@ -40,9 +33,29 @@ public class RollingFileWriter {
         try {
             FileOutputStream outStream = new FileOutputStream(filename, false);
             out = new DataOutputStream(new BufferedOutputStream(outStream));
-            writer = new Writer(out);
+            writer = new SnapshotStreamWriter(out);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void flush() {
+        writer.flush();
+    }
+
+    @Override
+    public void close() {
+        writer.close();
+    }
+
+    @Override
+    public void writeCollectionFinished(int time) {
+        writer.writeCollectionFinished(time);
+    }
+
+    @Override
+    public void write(long timestamp, Map<Thread, StackTraceElement[]> dump, Map<Thread, Context> contexts) throws IOException {
+        writer.write(timestamp, dump, contexts);
     }
 }

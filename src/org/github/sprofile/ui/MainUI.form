@@ -26,7 +26,7 @@
             <properties/>
             <border type="none"/>
             <children>
-              <component id="e537" class="org.github.sprofile.ui.TimelinePane" binding="timelinePane1" custom-create="true" default-binding="true">
+              <component id="e537" class="org.github.sprofile.ui.timeline.TimelinePane" binding="timelinePane1" custom-create="true" default-binding="true">
                 <constraints/>
                 <properties/>
               </component>

@@ -1,5 +1,7 @@
 package org.github.sprofile.io;
 
+import org.github.sprofile.Context;
+import org.github.sprofile.Details;
 import org.github.sprofile.ThreadInfo;
 
 import java.io.BufferedInputStream;
@@ -29,8 +31,13 @@ public class ProfileParser {
         Map<Long, ThreadInfo> threads = new HashMap();
         Map<Integer, StackTraceElement> traceElements = new HashMap();
         Map<Integer, StackTraceElement[]> traces = new HashMap();
+
         Map<Integer, String> atoms = new HashMap();
         atoms.put(0, null);
+
+        Map<Integer, Context> contexts = new HashMap();
+        contexts.put(0, null);
+
         try {
             while (true) {
                 int tk = din.readByte();
@@ -60,11 +67,13 @@ public class ProfileParser {
                 } else if (tk == OBSERVED_TRACE) {
                     long threadId = din.readLong();
                     int traceId = din.readInt();
+                    int contextId = din.readInt();
 
                     ThreadInfo ti = threads.get(threadId);
                     StackTraceElement[] trace = traces.get(traceId);
+                    Context context = contexts.get(contextId);
                     listener.observe(timestamp, threadId, ti.getName(), ti.getState(),
-                            trace);
+                            trace, context);
                 } else if (tk == NEW_ATOM) {
                     String value = din.readUTF();
                     atoms.put(atoms.size(), value);
@@ -72,6 +81,15 @@ public class ProfileParser {
                     listener.collectionTime(din.readInt());
                 } else if (tk == NEW_PROCESS) {
                     String value = din.readUTF();
+                } else if (tk == NEW_CONTEXT) {
+                    int prevContextId = din.readInt();
+                    int pairCount = din.readInt();
+                    String[] keyValues = new String[pairCount * 2];
+                    for (int i = 0; i < pairCount * 2; i++) {
+                        keyValues[i] = din.readUTF();
+                    }
+                    int contextId = contexts.size();
+                    contexts.put(contextId, new Context(new Details(keyValues), contexts.get(prevContextId)));
                 } else {
                     throw new RuntimeException("unknown: " + tk);
                 }

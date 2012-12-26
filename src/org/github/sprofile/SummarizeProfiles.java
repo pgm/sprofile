@@ -40,7 +40,7 @@ public class SummarizeProfiles {
         Counts callTree = new Counts();
 
         public void observe(long timestamp, long threadId, String threadName,
-                            State threadState, StackTraceElement[] trace) {
+                            State threadState, StackTraceElement[] trace, Context context) {
 
             if (filter != null) {
                 boolean foundMatch = false;

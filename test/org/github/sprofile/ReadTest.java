@@ -19,7 +19,7 @@ public class ReadTest {
         Map<String, Counts> counts = new HashMap();
 
         public void observe(long timestamp, long threadId, String threadName,
-                            State threadState, StackTraceElement[] trace) {
+                            State threadState, StackTraceElement[] trace, Context context) {
 
             for (StackTraceElement element : trace) {
                 get(element).children++;

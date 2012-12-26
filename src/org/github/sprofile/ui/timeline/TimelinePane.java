@@ -1,4 +1,4 @@
-package org.github.sprofile.ui;
+package org.github.sprofile.ui.timeline;
 
 import org.github.sprofile.Context;
 import org.github.sprofile.Details;
@@ -9,7 +9,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 
 
-public class TimelinePane extends JPanel {
+public class TimelinePane extends JComponent {
     Timeline model;
 
     public TimelinePane(Timeline model) {
@@ -139,5 +139,9 @@ public class TimelinePane extends JPanel {
         frame.getContentPane().add(new TimelinePane(timeline), BorderLayout.CENTER);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+    }
+
+    public Timeline getModel() {
+        return model;
     }
 }

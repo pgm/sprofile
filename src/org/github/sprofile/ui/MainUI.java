@@ -1,5 +1,7 @@
 package org.github.sprofile.ui;
 
+import org.github.sprofile.ui.timeline.TimelinePane;
+
 import javax.swing.*;
 
 /**

@@ -1,4 +1,4 @@
-package org.github.sprofile.ui;
+package org.github.sprofile.ui.timeline;
 
 /**
  * Created with IntelliJ IDEA.

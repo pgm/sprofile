@@ -7,23 +7,29 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-public class Profiler implements Runnable {
-    long sleepTime;
-
-    public Profiler(long sleepTime) {
-        this.sleepTime = sleepTime;
-    }
-
-    static final int MAX_TIME_BETWEEN_FLUSHES = 60 * 1000;
+public class Profiler {
+    final long sleepTime;
 
     boolean running = false;
     Thread samplerThread;
+
     Writer writer;
 
     Map<Thread, Context> contexts = new WeakHashMap();
 
     long lastFlush = System.currentTimeMillis();
+    long maxTimeBetweenFlushes = 60 * 1000;
 
+    public Profiler(long sleepTime, Writer writer) {
+        this.writer = writer;
+        this.sleepTime = sleepTime;
+    }
+
+    /**
+     * Called when we want to write a snapshot of the threads to the log
+     *
+     * @throws IOException
+     */
     public void sample() throws IOException {
         long timestamp = System.currentTimeMillis();
 
@@ -36,7 +42,8 @@ public class Profiler implements Runnable {
         }
         writer.write(timestamp, dump, contextMapSnapshot);
 
-        if (System.currentTimeMillis() - lastFlush > MAX_TIME_BETWEEN_FLUSHES) {
+        // check to see if it's been a while since we last flushed
+        if ((System.currentTimeMillis() - lastFlush) > maxTimeBetweenFlushes) {
             writer.flush();
         }
 
@@ -45,22 +52,17 @@ public class Profiler implements Runnable {
     }
 
     /**
-     * Record an event occurred.   This will always be recorded independent of sampling frequency,
-     * so care should be taken to not include too much information or include this too frequently.
-     *
-     * @param eventName
-     * @param parameters
-     */
-    public void signal(String eventName, Details parameters) {
-        throw new UnsupportedOperationException("unimplemented");
-    }
-
-    /**
      * Call the following method, providing some context which will be record (only if a sample happens to be taken while
      * within that call)
+     * <p/>
+     * For example, if instrumenting a JDBC call, one could provide the query string in the context so that when inspecting
+     * the log, we'll be able to see which query was taking a long time.
+     * <p/>
+     * As long as the callee has not returned (or thrown an exception) the context provided will be recorded as the current
+     * context as part of snapshots.
      *
-     * @param context
-     * @param callee
+     * @param context keys and values that provide general contextual information about the call being handled.
+     * @param callee  The method to invoke
      */
     public void callWithContext(Details context, Runnable callee) {
         Thread thread = Thread.currentThread();
@@ -82,32 +84,11 @@ public class Profiler implements Runnable {
         }
     }
 
-    public void stop() {
+    /**
+     * Invoked from background thread to take snapshots
+     */
+    protected void pollSnapshotsUntilStopped() {
         synchronized (this) {
-            if (running) {
-                running = false;
-                this.notifyAll();
-            }
-        }
-
-        // wait for thread to exit before resuming
-        try {
-            if (samplerThread != null)
-                samplerThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void run() {
-        synchronized (this) {
-//            try {
-//                out.writeByte(NEW_PROCESS);
-//                out.writeUTF(ManagementFactory.getRuntimeMXBean().getName());
-//            } catch (IOException ex) {
-//                throw new RuntimeException(ex);
-//            }
-
             running = true;
             samplerThread = Thread.currentThread();
             while (running) {
@@ -125,16 +106,12 @@ public class Profiler implements Runnable {
                 }
             }
         }
-
-//        try {
-//            out.close();
-//        } catch (IOException ex) {
-//            ex.printStackTrace();
-//        }
     }
 
-    public void start(String filename) throws IOException {
-
+    protected void registerShutdownHook() {
+        // request we get notified when the vm is shutting down.  Not strictly necessary
+        // but nice to gracefully cleanup and exit.  This runs the risk that we might
+        // prevent the JVM from exiting.  If we have any trouble, we can always pull this code.
         Thread shutdownThread = new Thread(new Runnable() {
             public void run() {
                 stop();
@@ -142,21 +119,43 @@ public class Profiler implements Runnable {
         });
         shutdownThread.setName("sprofiler shutdown hook");
         Runtime.getRuntime().addShutdownHook(shutdownThread);
+    }
 
-        Thread mainThread = new Thread(this);
+    /**
+     * Start a thread running in the background which will periodically take snapshots and write
+     * then to the provided log directory.
+     *
+     * @throws IOException
+     */
+    public void start() {
+        registerShutdownHook();
+
+        Thread mainThread = new Thread(new Runnable() {
+            public void run() {
+                pollSnapshotsUntilStopped();
+            }
+        });
         mainThread.setName("sprofiler");
         mainThread.setDaemon(true);
         mainThread.start();
     }
 
-    public static void agentmain(String agentArgs) {
-        String args[] = agentArgs.split(",");
-        String path = args[1];
-        System.setProperty(WatchAndAttach.SPROFILER_PATH, path);
-        Profiler p = new Profiler(Integer.parseInt(args[0]));
+    /**
+     * Stop the daemon thread running
+     */
+    public void stop() {
+        synchronized (this) {
+            if (running) {
+                running = false;
+                this.notifyAll();
+            }
+        }
+
+        // wait for thread to exit before resuming
         try {
-            p.start(path);
-        } catch (IOException e) {
+            if (samplerThread != null)
+                samplerThread.join();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
