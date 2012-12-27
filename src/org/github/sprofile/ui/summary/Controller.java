@@ -26,7 +26,7 @@ public class Controller {
         frame.setVisible(true);
     }
 
-    public void showAggregate(List<SummaryTableRow> rows, String elementFilter, String callFilter) {
+    protected List<Transform> createTransforms(String elementFilter, String callFilter) {
         List<Transform> transforms = new ArrayList();
 
         for (String expr : elementFilter.split(" ")) {
@@ -39,6 +39,12 @@ public class Controller {
                 transforms.add(new DropCaller(Pattern.compile(expr)));
         }
 
+        return transforms;
+    }
+
+    public void showAggregate(List<SummaryTableRow> rows, String elementFilter, String callFilter) {
+        List<Transform> transforms = createTransforms(elementFilter, callFilter);
+
         rows = transform(rows, transforms);
 
         Call tree = aggregate(rows);
@@ -50,9 +56,13 @@ public class Controller {
         frame.setVisible(true);
     }
 
-    public void showTimeline(SummaryTableRow row) {
-        JFrame frame = new JFrame("Timeline browser");
-        TimelineBrowser browser = new TimelineBrowser(this, row.timeline);
+    public void showTimeline(SummaryTableRow row, String elementFilter, String callFilter) {
+        List<Transform> transforms = createTransforms(elementFilter, callFilter);
+
+        Timeline timeline = transform(Arrays.asList(row), transforms).get(0).timeline;
+
+        JFrame frame = new JFrame("Timeline Browser");
+        TimelineBrowser browser = new TimelineBrowser(this, timeline);
         frame.setContentPane(browser.getRootPanel());
         frame.pack();
         frame.setVisible(true);
@@ -119,6 +129,8 @@ public class Controller {
 
         TimelineBuilder builder = new TimelineBuilder();
         for (SummaryTableRow row : rows) {
+            long threadId = row.threadId;
+            String threadName = row.threadName;
             Timeline timeline = row.timeline;
 
             for (int i = 0; i < timeline.getSampleCount(); i++) {
@@ -131,8 +143,9 @@ public class Controller {
                     }
                 }
 
-                builder.observe(timeline.getTime(i), row.threadId, row.threadName, null, trace, timeline.getContext(i));
+                builder.observe(timeline.getTime(i), threadId, threadName, null, trace, timeline.getContext(i));
             }
+
         }
 
         return builder.getThreads();

@@ -23,13 +23,16 @@
           <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
       </hspacer>
-      <scrollpane id="92c62">
+      <scrollpane id="92c62" binding="timelineContainer">
         <constraints>
           <grid row="1" column="0" row-span="1" col-span="2" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
             <preferred-size width="600" height="400"/>
           </grid>
         </constraints>
-        <properties/>
+        <properties>
+          <horizontalScrollBarPolicy value="32"/>
+          <verticalScrollBarPolicy value="21"/>
+        </properties>
         <border type="none"/>
         <children>
           <component id="4df83" class="org.github.sprofile.ui.timeline.TimelinePane" binding="timelinePane1" custom-create="true" default-binding="true">
@@ -109,7 +112,7 @@
         <properties/>
         <border type="none"/>
         <children>
-          <component id="748e5" class="javax.swing.JButton" default-binding="true">
+          <component id="748e5" class="javax.swing.JButton" binding="zoomButton">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
             </constraints>

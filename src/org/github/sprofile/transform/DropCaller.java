@@ -1,6 +1,7 @@
 package org.github.sprofile.transform;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -23,17 +24,20 @@ public class DropCaller implements Transform {
         List<StackTraceElement> result = new ArrayList();
 
         boolean foundCall = false;
-        for (StackTraceElement element : trace) {
-            if (foundCall) {
-                result.add(element);
-            } else {
+        for (int i = 0; i < trace.length; i++) {
+            StackTraceElement element = trace[trace.length - i - 1];
+            if (!foundCall) {
                 String fullName = element.getClassName() + "." + element.getMethodName();
                 if (callName.matcher(fullName).matches()) {
                     foundCall = true;
                 }
             }
+            if (foundCall) {
+                result.add(element);
+            }
         }
 
+        Collections.reverse(result);
         return result.toArray(new StackTraceElement[result.size()]);
     }
 }

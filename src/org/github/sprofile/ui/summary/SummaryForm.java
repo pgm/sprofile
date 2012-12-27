@@ -31,9 +31,10 @@ public class SummaryForm {
         viewTimelineButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                SummaryForm.this.controller.showTimeline(SummaryForm.this.rows.get(table.getSelectedRow()));
+                SummaryForm.this.controller.showTimeline(SummaryForm.this.rows.get(table.getSelectedRow()), elementFilterTextField.getText(), traceFilterTextField.getText());
             }
         });
+        updateButtonState();
     }
 
     private List<SummaryTableRow> getSelectedRows() {
