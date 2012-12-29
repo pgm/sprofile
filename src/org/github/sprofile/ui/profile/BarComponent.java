@@ -18,6 +18,9 @@ public class BarComponent extends JComponent implements TableCellRenderer {
     protected void paintComponent(Graphics graphics) {
         Insets insets = this.getInsets();
 
+        graphics.setColor(this.getBackground());
+        graphics.fillRect(0, 0, getWidth(), getHeight());
+
         int w = (int) ((getWidth() - insets.right - insets.left) * fraction);
 
         graphics.setColor(this.getForeground());
@@ -29,12 +32,20 @@ public class BarComponent extends JComponent implements TableCellRenderer {
     }
 
     public BarComponent() {
-        this.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        this.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
     }
 
     @Override
-    public Component getTableCellRendererComponent(JTable jTable, Object o, boolean b, boolean b2, int i, int i2) {
-        this.fraction = ((Number) o).floatValue();
+    public Component getTableCellRendererComponent(JTable jTable, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+
+        if (isSelected) {
+            this.setForeground(jTable.getSelectionForeground());
+            this.setBackground(jTable.getSelectionBackground());
+        } else {
+            this.setForeground(jTable.getForeground());
+            this.setBackground(jTable.getBackground());
+        }
+        this.fraction = ((Number) value).floatValue();
         return this;
     }
 

@@ -1,6 +1,6 @@
 package org.github.sprofile;
 
-import org.github.sprofile.io.ProfileParser;
+import org.github.sprofile.io.SamplesParser;
 import org.github.sprofile.ui.summary.Controller;
 import org.github.sprofile.ui.summary.SummaryForm;
 import org.github.sprofile.ui.timeline.TimelineBuilder;
@@ -19,7 +19,7 @@ public class UITest {
 
     public static void main(String[] args) throws Exception {
         TimelineBuilder listener = new TimelineBuilder();
-        ProfileParser pp = new ProfileParser("samples-20121223-210002.788",
+        SamplesParser pp = new SamplesParser("profile2",
                 listener);
         pp.read();
 

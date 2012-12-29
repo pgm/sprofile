@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public class Call {
     final StackTraceElement element;
-    public final Map<StackTraceElement, Call> children = new HashMap();
+    public final Map<CallKey, Call> children = new HashMap();
     public int selfCount;
     public int childCount;
 

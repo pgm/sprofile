@@ -100,10 +100,11 @@ public class Controller {
             for (int traceIndex = 0; traceIndex < trace.length; traceIndex++) {
                 StackTraceElement element = trace[trace.length - traceIndex - 1];
 
-                Call child = node.children.get(element);
+                CallKey key = new CallKey(element.getClassName(), element.getMethodName());
+                Call child = node.children.get(key);
                 if (child == null) {
                     child = new Call(element);
-                    node.children.put(element, child);
+                    node.children.put(key, child);
                 }
                 child.selfCount++;
                 node = child;
@@ -133,6 +134,7 @@ public class Controller {
             String threadName = row.threadName;
             Timeline timeline = row.timeline;
 
+            builder.threadName(row.threadId, row.threadName);
             for (int i = 0; i < timeline.getSampleCount(); i++) {
                 StackTraceElement[] trace = timeline.getTrace(i);
                 if (cached.containsKey(trace)) {
@@ -143,7 +145,7 @@ public class Controller {
                     }
                 }
 
-                builder.observe(timeline.getTime(i), threadId, threadName, null, trace, timeline.getContext(i));
+                builder.sample(timeline.getTime(i), threadId, null, trace, timeline.getContext(i));
             }
 
         }

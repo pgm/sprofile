@@ -5,6 +5,7 @@ import org.jdesktop.swingx.JXTreeTable;
 import javax.swing.*;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableColumn;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -20,27 +21,38 @@ public class ProfileView {
     public static JFrame createProfileWindow(StackTreeNode root) {
         ProfileModel treeModel = new ProfileModel(root);
 
+        DefaultTreeCellRenderer treeCellRenderer = new DefaultTreeCellRenderer();
+        treeCellRenderer.setLeafIcon(null);
+        treeCellRenderer.setOpenIcon(null);
+        treeCellRenderer.setClosedIcon(null);
+
         JXTreeTable tree = new JXTreeTable();
-        tree.setShowsRootHandles(false);
+        tree.setShowsRootHandles(true);
+        tree.setTreeCellRenderer(treeCellRenderer);
         tree.setTreeTableModel(treeModel);
-        tree.expandAll();
 
         DefaultTableColumnModel columnModel = new DefaultTableColumnModel();
-        TableColumn c1 = new TableColumn(0, 100, tree.getDefaultRenderer(String.class), tree.getDefaultEditor(String.class));
-        c1.setHeaderValue(treeModel.getColumnName(0));
-        TableColumn c2 = new TableColumn(1, 100, tree.getDefaultRenderer(Integer.class), tree.getDefaultEditor(Integer.class));
-        c2.setHeaderValue(treeModel.getColumnName(1));
-        TableColumn c3 = new TableColumn(2, 100, new BarComponent(), tree.getDefaultEditor(Float.class));
-        c3.setHeaderValue(treeModel.getColumnName(2));
+        TableColumn methodColumn = new TableColumn(0, 300, tree.getDefaultRenderer(String.class), tree.getDefaultEditor(String.class));
+        methodColumn.setHeaderValue(treeModel.getColumnName(0));
 
-        columnModel.addColumn(c1);
-        columnModel.addColumn(c2);
-        columnModel.addColumn(c3);
+        TableColumn packageColumn = new TableColumn(1, 50, tree.getDefaultRenderer(String.class), tree.getDefaultEditor(String.class));
+        packageColumn.setHeaderValue(treeModel.getColumnName(1));
+
+        TableColumn samplesColumn = new TableColumn(2, 50, tree.getDefaultRenderer(Integer.class), tree.getDefaultEditor(Integer.class));
+        samplesColumn.setHeaderValue(treeModel.getColumnName(2));
+
+        TableColumn percentColumn = new TableColumn(3, 100, new BarComponent(), tree.getDefaultEditor(Float.class));
+        percentColumn.setHeaderValue(treeModel.getColumnName(3));
+
+        columnModel.addColumn(methodColumn);
+        columnModel.addColumn(packageColumn);
+        columnModel.addColumn(samplesColumn);
+        columnModel.addColumn(percentColumn);
         tree.setColumnModel(columnModel);
 
         //tree.set
 
-        JFrame frame = new JFrame("test");
+        JFrame frame = new JFrame("Aggregated Profile");
         frame.setSize(600, 400);
         frame.getContentPane().add(new JScrollPane(tree));
 //        frame.pack();
@@ -50,9 +62,9 @@ public class ProfileView {
 
     public static void main(String[] args) throws Exception {
 
-        StackTreeNode child1 = new StackTreeNode(new StackTraceElement("child1", "method", "file", 100), 30, 0.5f, Collections.EMPTY_LIST);
-        StackTreeNode child3 = new StackTreeNode(new StackTraceElement("child3", "method", "file", 100), 30, 0.5f, Collections.EMPTY_LIST);
-        StackTreeNode child2 = new StackTreeNode(new StackTraceElement("child2", "method", "file", 100), 30, 0.5f, Arrays.asList(child3));
+        StackTreeNode child1 = new StackTreeNode(new StackTraceElement("class", "method1", "file", 100), 30, 0.5f, Collections.EMPTY_LIST);
+        StackTreeNode child3 = new StackTreeNode(new StackTraceElement("class", "method2", "file", 100), 30, 0.2f, Collections.EMPTY_LIST);
+        StackTreeNode child2 = new StackTreeNode(new StackTraceElement("class", "method3", "file", 100), 30, 0.5f, Arrays.asList(child3));
 
         StackTreeNode root = new StackTreeNode(null, 100, 0.5f, Arrays.asList(child1, child2));
 

@@ -1,12 +1,12 @@
 package org.github.sprofile.ui.timeline;
 
 import org.github.sprofile.Context;
-import org.github.sprofile.io.ObservationListener;
+import org.github.sprofile.io.SampleListener;
 import org.github.sprofile.ui.summary.SummaryTableRow;
 
 import java.util.*;
 
-public class TimelineBuilder implements ObservationListener {
+public class TimelineBuilder implements SampleListener {
     static class PointInTime {
         final long timestamp;
         final StackTraceElement[] trace;
@@ -21,7 +21,6 @@ public class TimelineBuilder implements ObservationListener {
 
     static class ThreadDetails {
         String process;
-        String threadName;
         long threadId;
         Date start;
         long lastTimestamp;
@@ -30,16 +29,22 @@ public class TimelineBuilder implements ObservationListener {
     }
 
     Map<Long, ThreadDetails> threadDetailsMap = new HashMap();
+    Map<Long, String> threadNamesMap = new HashMap();
+    String currentProcess;
 
     @Override
-    public void observe(long timestamp, long threadId, String threadName, Thread.State threadState, StackTraceElement[] trace, Context context) {
+    public void processDescription(String name) {
+        this.currentProcess = name;
+    }
+
+    @Override
+    public void sample(long timestamp, long threadId, Thread.State threadState, StackTraceElement[] trace, Context context) {
         ThreadDetails threadDetails = threadDetailsMap.get(threadId);
 
         if (threadDetails == null) {
             threadDetails = new ThreadDetails();
-            threadDetails.threadName = threadName;
             threadDetails.threadId = threadId;
-            threadDetails.process = "unknown";
+            threadDetails.process = currentProcess;
             threadDetails.start = new Date(timestamp);
             threadDetailsMap.put(threadId, threadDetails);
         }
@@ -53,10 +58,15 @@ public class TimelineBuilder implements ObservationListener {
     public void collectionTime(int milliseconds) {
     }
 
+    @Override
+    public void threadName(long threadId, String name) {
+        threadNamesMap.put(threadId, name);
+    }
+
     public List<SummaryTableRow> getThreads() {
         List<SummaryTableRow> threads = new ArrayList();
         for (ThreadDetails details : threadDetailsMap.values()) {
-            threads.add(new SummaryTableRow(details.process, details.threadId, details.threadName, details.samples, details.start, new Date(details.lastTimestamp), makeTimeline(details.points)));
+            threads.add(new SummaryTableRow(details.process, details.threadId, threadNamesMap.get(details.threadId), details.samples, details.start, new Date(details.lastTimestamp), makeTimeline(details.points)));
         }
         return threads;
     }

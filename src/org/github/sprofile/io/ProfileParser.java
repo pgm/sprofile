@@ -2,7 +2,6 @@ package org.github.sprofile.io;
 
 import org.github.sprofile.Context;
 import org.github.sprofile.Details;
-import org.github.sprofile.ThreadInfo;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -16,71 +15,72 @@ import static org.github.sprofile.io.Constants.*;
 public class ProfileParser {
     DataInputStream din;
 
-    ObservationListener listener;
+    ProfileVisitor visitor;
 
-    public ProfileParser(String filename, ObservationListener listener)
+    public ProfileParser(String filename, ProfileVisitor visitor)
             throws IOException {
         FileInputStream in = new FileInputStream(filename);
         BufferedInputStream bin = new BufferedInputStream(in);
         din = new DataInputStream(bin);
-        this.listener = listener;
+        this.visitor = visitor;
     }
 
     public void read() throws IOException {
-        long timestamp = 0;
-        Map<Long, ThreadInfo> threads = new HashMap();
         Map<Integer, StackTraceElement> traceElements = new HashMap();
         Map<Integer, StackTraceElement[]> traces = new HashMap();
 
         Map<Integer, String> atoms = new HashMap();
-        atoms.put(0, null);
-
         Map<Integer, Context> contexts = new HashMap();
+
+        atoms.put(0, null);
         contexts.put(0, null);
 
         try {
             while (true) {
                 int tk = din.readByte();
                 if (tk == TIMESTAMP) {
-                    timestamp = din.readLong();
-                } else if (tk == NEW_THREAD_INFO) {
+                    long timestamp = din.readLong();
+                    visitor.handleTimestamp(timestamp);
+                } else if (tk == THREAD_NAME) {
                     long threadId = din.readLong();
                     String name = readAtom(din, atoms);
-                    byte state = din.readByte();
-                    ThreadInfo ti = new ThreadInfo(name, Thread.State.NEW);
-                    threads.put(threadId, ti);
+                    visitor.handleThreadName(threadId, name);
                 } else if (tk == NEW_TRACE) {
                     int len = din.readShort();
                     StackTraceElement[] elements = new StackTraceElement[len];
                     for (int i = 0; i < len; i++) {
                         elements[i] = traceElements.get(din.readInt());
                     }
-                    traces.put(traces.size(), elements);
+                    int index = traces.size();
+                    traces.put(index, elements);
+                    visitor.handleTrace(index, elements);
                 } else if (tk == NEW_TRACE_ELEMENT) {
                     String className = readAtom(din, atoms);
-                    String fileName = readAtom(din, atoms);
+                    String filename
+                            = readAtom(din, atoms);
                     String methodName = readAtom(din, atoms);
                     int lineNumber = din.readInt();
-                    traceElements.put(traceElements.size(),
+                    int index = traceElements.size();
+                    traceElements.put(index,
                             new StackTraceElement(className, methodName,
-                                    fileName, lineNumber));
+                                    filename, lineNumber));
+                    visitor.handleTraceElement(index, className, filename, methodName, lineNumber);
                 } else if (tk == OBSERVED_TRACE) {
                     long threadId = din.readLong();
+                    int state = din.readByte();
                     int traceId = din.readInt();
                     int contextId = din.readInt();
-
-                    ThreadInfo ti = threads.get(threadId);
-                    StackTraceElement[] trace = traces.get(traceId);
-                    Context context = contexts.get(contextId);
-                    listener.observe(timestamp, threadId, ti.getName(), ti.getState(),
-                            trace, context);
+                    visitor.handleSampledTrace(threadId, Thread.State.values()[state], traces.get(traceId), contexts.get(contextId));
                 } else if (tk == NEW_ATOM) {
                     String value = din.readUTF();
-                    atoms.put(atoms.size(), value);
+                    int index = atoms.size();
+                    atoms.put(index, value);
+                    visitor.handleAtom(index, value);
                 } else if (tk == COLLECTION_TIME) {
-                    listener.collectionTime(din.readInt());
+                    visitor.handleCollectionTime(din.readInt());
                 } else if (tk == NEW_PROCESS) {
                     String value = din.readUTF();
+                    visitor.handleProcessInfo(value);
                 } else if (tk == NEW_CONTEXT) {
                     int prevContextId = din.readInt();
                     int pairCount = din.readInt();
@@ -89,7 +89,9 @@ public class ProfileParser {
                         keyValues[i] = din.readUTF();
                     }
                     int contextId = contexts.size();
-                    contexts.put(contextId, new Context(new Details(keyValues), contexts.get(prevContextId)));
+                    Context context = new Context(new Details(keyValues), contexts.get(prevContextId));
+                    contexts.put(contextId, context);
+                    visitor.handleContext(contextId, context);
                 } else {
                     throw new RuntimeException("unknown: " + tk);
                 }

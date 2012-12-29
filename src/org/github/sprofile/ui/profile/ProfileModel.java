@@ -20,8 +20,10 @@ public class ProfileModel extends AbstractTreeTableModel {
             case 0:
                 return "Method";
             case 1:
-                return "Samples";
+                return "Package";
             case 2:
+                return "Samples";
+            case 3:
                 return "Percentage";
         }
         throw new UnsupportedOperationException();
@@ -29,7 +31,7 @@ public class ProfileModel extends AbstractTreeTableModel {
 
     @Override
     public int getColumnCount() {
-        return 3;
+        return 4;
     }
 
     @Override
@@ -39,10 +41,16 @@ public class ProfileModel extends AbstractTreeTableModel {
             case 0:
                 if (e.getElement() == null)
                     return null;
-                return e.getElement().toString();
+                StackTraceElement ste = e.getElement();
+                return ste;
             case 1:
-                return e.getSamples();
+                if (e.getElement() == null)
+                    return null;
+                StackTraceElement ste2 = e.getElement();
+                return ste2.getClassName();
             case 2:
+                return e.getSamples();
+            case 3:
                 return e.getSamplePercentage();
         }
         throw new UnsupportedOperationException();

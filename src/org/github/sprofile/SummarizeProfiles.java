@@ -1,15 +1,6 @@
 package org.github.sprofile;
 
-import org.github.sprofile.io.ObservationListener;
-import org.github.sprofile.io.ProfileParser;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.Thread.State;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 public class SummarizeProfiles {
     static class Counts {
@@ -18,9 +9,9 @@ public class SummarizeProfiles {
         int children;
         Map<String, Counts> childCounts;
     }
-
+/*
     public static final class SummarizeObservations implements
-            ObservationListener {
+            SampleListener {
 
         final static Comparator<Counts> COMPARE_BY_CHILD_COUNT = new Comparator<Counts>() {
             public int compare(Counts o1, Counts o2) {
@@ -39,7 +30,12 @@ public class SummarizeProfiles {
         Map<String, Counts> counts = new HashMap();
         Counts callTree = new Counts();
 
-        public void observe(long timestamp, long threadId, String threadName,
+        @Override
+        public void threadName(long threadId, String name) {
+
+        }
+
+        public void sample(long timestamp, long threadId,
                             State threadState, StackTraceElement[] trace, Context context) {
 
             if (filter != null) {
@@ -125,10 +121,8 @@ public class SummarizeProfiles {
             }
         }
     }
-
-    /**
-     * @param args
-     */
+ */
+    /*
     public static void main(String[] args) throws IOException {
         Pattern filter = null;
         if (args.length > 1) {
@@ -150,11 +144,12 @@ public class SummarizeProfiles {
                     && child.getName().endsWith(".dat")) {
                 System.out.println("reading " + child.getPath());
 
-                ProfileParser pp = new ProfileParser(child.getAbsolutePath(),
+                SamplesParser pp = new SamplesParser(child.getAbsolutePath(),
                         listener);
                 pp.read();
             }
         }
 
     }
+*/
 }

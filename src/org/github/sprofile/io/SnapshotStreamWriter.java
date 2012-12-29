@@ -1,7 +1,6 @@
 package org.github.sprofile.io;
 
 import org.github.sprofile.Context;
-import org.github.sprofile.ThreadInfo;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -14,9 +13,46 @@ import static org.github.sprofile.io.Constants.*;
 public class SnapshotStreamWriter implements Writer {
     final DataOutputStream out;
 
-    private Map<StackTraceElement, Integer> stackTraceElements = new HashMap();
+    static class HashableElement {
+        String className;
+        String methodName;
+        String filename;
+        int lineNumber;
+
+        HashableElement(StackTraceElement element) {
+            this.className = element.getClassName();
+            this.methodName = element.getMethodName();
+            this.filename = element.getFileName();
+            this.lineNumber = element.getLineNumber();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+
+            HashableElement that = (HashableElement) o;
+
+            if (lineNumber != that.lineNumber) return false;
+            if (className != null ? !className.equals(that.className) : that.className != null) return false;
+            if (filename != null ? !filename.equals(that.filename) : that.filename != null) return false;
+            if (methodName != null ? !methodName.equals(that.methodName) : that.methodName != null) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = className != null ? className.hashCode() : 0;
+            result = 31 * result + (methodName != null ? methodName.hashCode() : 0);
+            result = 31 * result + (filename != null ? filename.hashCode() : 0);
+            result = 31 * result + lineNumber;
+            return result;
+        }
+    }
+
+    private Map<HashableElement, Integer> stackTraceElements = new HashMap();
     private Map<IdList, Integer> traces = new HashMap();
-    private Map<Long, ThreadInfo> threadInfo = new HashMap();
+    private Map<Long, String> threadInfo = new HashMap();
     private Map<String, Integer> atoms = new HashMap();
 
     {
@@ -36,8 +72,14 @@ public class SnapshotStreamWriter implements Writer {
     private List<IdList> unwrittenTraces = new ArrayList();
     private List<Context> unwrittenContexts = new ArrayList();
 
-    public SnapshotStreamWriter(OutputStream os) {
+    public SnapshotStreamWriter(String processDescription, OutputStream os) {
         out = new DataOutputStream(os);
+        try {
+            out.writeByte(NEW_PROCESS);
+            out.writeUTF(processDescription);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public void flush() {
@@ -107,27 +149,17 @@ public class SnapshotStreamWriter implements Writer {
 
     private void writeThreadState(DataOutputStream out, Thread thread2,
                                   StackTraceElement[] trace, Context context) throws IOException {
-// fix to avoid having to write thread info every sample
-//        ThreadInfo writtenThreadInfo = threadInfo.get(thread2.getId());
-//        if (writtenThreadInfo == null
-//                || !writtenThreadInfo.name.equals(thread2.getName())
-//                || writtenThreadInfo.state != thread2.getState()) {
-//            if (writtenThreadInfo == null) {
-//                writtenThreadInfo = new ThreadInfo();
-//            }
-//            writtenThreadInfo.name = thread2.getName();
-//            writtenThreadInfo.state = thread2.getState();
-
-        out.writeByte(NEW_THREAD_INFO);
-        out.writeLong(thread2.getId());
-        out.writeInt(getAtomId(thread2.getName()));
-        out.writeByte(thread2.getState().ordinal());
-//        }
+        String name = threadInfo.get(thread2.getId());
+        if (name == null || !name.equals(thread2.getName())) {
+            out.writeByte(THREAD_NAME);
+            out.writeLong(thread2.getId());
+            out.writeInt(getAtomId(thread2.getName()));
+        }
 
         int traceId = getTraceId(trace);
         int contextId = getContextId(context);
 
-        write(out, thread2.getId(), traceId, contextId);
+        writeSample(out, thread2.getId(), thread2.getState(), traceId, contextId);
     }
 
     private int getAtomId(String str) {
@@ -140,8 +172,9 @@ public class SnapshotStreamWriter implements Writer {
         return id;
     }
 
-    private void write(DataOutputStream out, long threadId, int traceId, int contextId)
+    private void writeSample(DataOutputStream out, long threadId, Thread.State state, int traceId, int contextId)
             throws IOException {
+
         for (StackTraceElement e : unwrittenStackTraceElements) {
             out.writeByte(NEW_TRACE_ELEMENT);
             out.writeInt(getAtomId(e.getClassName()));
@@ -162,6 +195,7 @@ public class SnapshotStreamWriter implements Writer {
 
         out.writeByte(OBSERVED_TRACE);
         out.writeLong(threadId);
+        out.writeByte(state.ordinal());
         out.writeInt(traceId);
         out.writeInt(contextId);
     }
@@ -181,7 +215,6 @@ public class SnapshotStreamWriter implements Writer {
         int[] ids = new int[trace.length];
         for (int i = 0; i < trace.length; i++) {
             ids[i] = getTraceElementId(trace[i]);
-            unwrittenStackTraceElements.add(trace[i]);
         }
         IdList idList = new IdList(ids);
 
@@ -196,10 +229,12 @@ public class SnapshotStreamWriter implements Writer {
     }
 
     private int getTraceElementId(StackTraceElement stackTraceElement) {
-        Integer id = stackTraceElements.get(stackTraceElement);
+        HashableElement e = new HashableElement(stackTraceElement);
+        Integer id = stackTraceElements.get(e);
         if (id == null) {
             id = stackTraceElements.size();
-            stackTraceElements.put(stackTraceElement, id);
+            stackTraceElements.put(e, id);
+            unwrittenStackTraceElements.add(stackTraceElement);
         }
         return id;
     }

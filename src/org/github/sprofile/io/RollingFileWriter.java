@@ -11,11 +11,13 @@ public class RollingFileWriter implements Writer {
     final int fileLengthThreshold;
     final String filenamePrefix;
     final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
+    final String processDescription;
 
     SnapshotStreamWriter writer;
     DataOutputStream out;
 
-    public RollingFileWriter(int fileLengthThreshold, String filenamePrefix) {
+    public RollingFileWriter(String processDescription, int fileLengthThreshold, String filenamePrefix) {
+        this.processDescription = processDescription;
         this.fileLengthThreshold = fileLengthThreshold;
         this.filenamePrefix = filenamePrefix;
         openNewWriter(new Date());
@@ -33,7 +35,7 @@ public class RollingFileWriter implements Writer {
         try {
             FileOutputStream outStream = new FileOutputStream(filename, false);
             out = new DataOutputStream(new BufferedOutputStream(outStream));
-            writer = new SnapshotStreamWriter(out);
+            writer = new SnapshotStreamWriter(processDescription, out);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }

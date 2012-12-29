@@ -35,7 +35,12 @@ public class StackTreeNode {
     }
 
     public StackTraceElement getElement() {
-
         return element;
+    }
+
+    public String toString() {
+        if (element == null)
+            return "null";
+        return element.getMethodName();
     }
 }
