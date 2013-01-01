@@ -24,21 +24,36 @@ public class AgentMain {
         String processDesc = System.getProperty("sun.java.command");
 
         try {
-            Socket socket = new Socket(InetAddress.getLocalHost(), port);
-            OutputStreamWriter socketWriter = new OutputStreamWriter(socket.getOutputStream());
+            final Socket socket = new Socket(InetAddress.getLocalHost(), port);
+            final OutputStreamWriter socketWriter = new OutputStreamWriter(socket.getOutputStream());
             socketWriter.write("Starting sampling writing to " + path);
             socketWriter.flush();
 
-            SnapshotStreamWriter writer = new SnapshotStreamWriter(processDesc, new FileOutputStream(path));
-            Profiler profiler = new Profiler(samplingPeriod, writer);
+            final SnapshotStreamWriter writer = new SnapshotStreamWriter(processDesc, new FileOutputStream(path));
+            final Profiler profiler = new Profiler(samplingPeriod, writer);
             profiler.start();
 
-            // block until we get notification that this stream closed
-            int eof = socket.getInputStream().read();
+            // kick off another thread to block on the stream, because the jvm still thinks the agent hasn't initialized until
+            // this method returns.
 
-            // The attach process has stopped.  Stop profiling
-            profiler.stop();
-            writer.close();
+            Thread thread = new Thread(new Runnable() {
+                public void run() {
+                    // block until we get notification that this stream closed
+                    try {
+                        int eof = socket.getInputStream().read();
+
+                        // The attach process has stopped.  Stop profiling
+                        profiler.stop();
+                        writer.close();
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
+
+            thread.setDaemon(true);
+            thread.setName("Sprofile logging");
+            thread.start();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
