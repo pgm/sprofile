@@ -41,6 +41,13 @@ public class Profiler2Test {
         Profiler p = new Profiler(50, writer);
         p.start();
 
+        runCpuIntensiveTask();
+
+        p.stop();
+        out.close();
+    }
+
+    public static void runCpuIntensiveTask() throws Exception {
         for (int i = 0; i < 3; i++) {
             FileInputStream in = new FileInputStream("/Users/pgm/search_results.FASTA");
             byte[] buffer = new byte[5000];
@@ -56,8 +63,5 @@ public class Profiler2Test {
             dest.close();
             System.out.println("" + i);
         }
-
-        p.stop();
-        out.close();
     }
 }

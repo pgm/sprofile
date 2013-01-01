@@ -23,7 +23,7 @@ public class TimelineBrowserTest {
         StackTraceElement[][] traces = new StackTraceElement[steps][];
 
         StackTraceElement element = new StackTraceElement("org.foo.Foo", "bar", "Foo.java", 100);
-        Context context = new Context(new Details("alpha", "beta"), null);
+        Context context = new Context(1, new Details("alpha", "beta"), null);
         for (int i = 0; i < steps; i++) {
             timestamps[i] = i * 10000;
             contexts[i] = context;

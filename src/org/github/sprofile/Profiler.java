@@ -20,6 +20,8 @@ public class Profiler {
     long lastFlush = System.currentTimeMillis();
     long maxTimeBetweenFlushes = 60 * 1000;
 
+    int nextContextId = 100;
+
     public Profiler(long sleepTime, Writer writer) {
         this.writer = writer;
         this.sleepTime = sleepTime;
@@ -71,7 +73,7 @@ public class Profiler {
         Context prevContext;
         synchronized (this) {
             prevContext = contexts.get(thread);
-            contexts.put(thread, new Context(context, prevContext));
+            contexts.put(thread, new Context(getNextContextId(), context, prevContext));
         }
 
         try {
@@ -83,6 +85,13 @@ public class Profiler {
             }
         }
     }
+
+    protected int getNextContextId() {
+        int i = nextContextId;
+        nextContextId++;
+        return i;
+    }
+
 
     /**
      * Invoked from background thread to take snapshots

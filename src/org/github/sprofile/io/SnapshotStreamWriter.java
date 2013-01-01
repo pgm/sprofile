@@ -125,6 +125,7 @@ public class SnapshotStreamWriter implements Writer {
             for (Context c : unwrittenContexts) {
                 int prevContextId = getContextId(c.getPrevious());
                 out.writeByte(NEW_CONTEXT);
+                out.writeInt(c.getInstance());
                 out.writeInt(prevContextId);
                 String[] keyValues = c.getKeyValues();
                 out.writeInt(keyValues.length / 2);

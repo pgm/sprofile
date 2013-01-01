@@ -1,17 +1,24 @@
 <project name="sprofile" default="jar">
 
-	<target name="compile" description="Compiles code, output goes to out/classes">
-	    <mkdir dir="out/classes" />
-	    <javac srcdir="src" destdir="out/classes" debug="true" source="1.5" includes="**/*.java"/>
-	</target>
+    <target name="compile" description="Compiles code, output goes to out/classes">
+        <mkdir dir="out/classes"/>
+        <javac srcdir="src" destdir="out/classes" debug="true" source="1.5" includes="**/*.java">
+            <classpath>
+                <pathelement path="lib/jbzip2-0.9.1.jar"/>
+                <pathelement path="lib/junit-4.11.jar"/>
+                <pathelement path="lib/servlet-api.jar"/>
+                <pathelement path="lib/swingx-all-1.6.4.jar"/>
+            </classpath>
+        </javac>
+    </target>
 
-	<target name="jar" description="Build the jar." depends="compile">
-	    <jar destfile="out/dist/sprofile.jar" basedir="out/classes" includes="**/*.class" index="no">
-	        <manifest>
-	            <attribute name="Main-Class" value="org.github.sprofile.WatchAndAttach"/>
-	            <attribute name="Agent-Class" value="org.github.sprofile.Profiler"/>
-	        </manifest>
-	    </jar>
-	</target>
+    <target name="jar" description="Build the jar." depends="compile">
+        <jar destfile="out/dist/sprofile.jar" basedir="out/classes" includes="**/*.class" index="no">
+            <manifest>
+                <attribute name="Main-Class" value="org.github.sprofile.AttachToJvm"/>
+                <attribute name="Agent-Class" value="org.github.sprofile.AgentMain"/>
+            </manifest>
+        </jar>
+    </target>
 
 </project>

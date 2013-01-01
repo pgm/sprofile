@@ -82,6 +82,7 @@ public class ProfileParser {
                     String value = din.readUTF();
                     visitor.handleProcessInfo(value);
                 } else if (tk == NEW_CONTEXT) {
+                    int instance = din.readInt();
                     int prevContextId = din.readInt();
                     int pairCount = din.readInt();
                     String[] keyValues = new String[pairCount * 2];
@@ -89,7 +90,7 @@ public class ProfileParser {
                         keyValues[i] = din.readUTF();
                     }
                     int contextId = contexts.size();
-                    Context context = new Context(new Details(keyValues), contexts.get(prevContextId));
+                    Context context = new Context(instance, new Details(keyValues), contexts.get(prevContextId));
                     contexts.put(contextId, context);
                     visitor.handleContext(contextId, context);
                 } else {

@@ -1,12 +1,18 @@
 package org.github.sprofile;
 
 public class Context {
+    final int instance;
     final Context prev;
     final Details details;
 
-    public Context(Details details, Context prev) {
+    public Context(int instance, Details details, Context prev) {
+        this.instance = instance;
         this.prev = prev;
         this.details = details;
+    }
+
+    public int getInstance() {
+        return instance;
     }
 
     public Context getPrevious() {
