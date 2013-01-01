@@ -34,7 +34,9 @@ element of the intellectual exploration) eventually me to creating sprofile.
 
 * Samples are written as a sequential log.  The idea being that you could 
 write multiple logs for different processes and then aggregate them together
-in the UI to look at cross-server profiles.
+in the UI to look at cross-server profiles.  Also, this means that you can parse 
+an incomplete file and you should still get a valid profile up until a certain
+point in time.
 * There is the ability to save "context" information associated with a stack trace.  
 This can be used to embed some contextual information that will help explain
 why it is spending so much time in the given routine.  (For example, it
@@ -42,13 +44,12 @@ could be the filename that was passed into a parse call)   If no sample is
 taken while still in the call, then the context information is not written
 and only adds very minimal overhead.
 
-Sprofile is intended to be run was a low sampling frequency.  For these
+Sprofile is intended to be run with a very low sampling frequency.  For these
 large map/reduce jobs that took hours, even infrequent samples provide a
 meaningful statistical sample.   Also, sampling infrequently, the overhead
 would be low enought that it would be part of the normal logging of the
-process and used in production.  
-
-When a performance question arose, we could just mine the logs.
+process and used in production.  When a performance question arose, we 
+could mine the already generated logs.
 
 ## Future work
 
