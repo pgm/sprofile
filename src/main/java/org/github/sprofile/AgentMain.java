@@ -1,6 +1,8 @@
 package org.github.sprofile;
 
+import org.github.sprofile.io.RollingFileWriter;
 import org.github.sprofile.io.SnapshotStreamWriter;
+import org.github.sprofile.io.Writer;
 
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
@@ -21,7 +23,10 @@ public class AgentMain {
         int samplingPeriod = Integer.parseInt(args[0]);
         int port = Integer.parseInt(args[1]);
         String path = args[2];
+        int maxLen = Integer.parseInt(args[3]);
+        int maxFiles = Integer.parseInt(args[4]);
         String processDesc = System.getProperty("sun.java.command");
+        System.out.println("Starting sampling writing to "+path);
 
         try {
             final Socket socket = new Socket(InetAddress.getLocalHost(), port);
@@ -29,7 +34,7 @@ public class AgentMain {
             socketWriter.write("Starting sampling writing to " + path);
             socketWriter.flush();
 
-            final SnapshotStreamWriter writer = new SnapshotStreamWriter(processDesc, new FileOutputStream(path));
+            final Writer writer = new RollingFileWriter(processDesc, maxLen, maxFiles, path);
             final Profiler profiler = new Profiler(samplingPeriod, writer);
             profiler.start();
 

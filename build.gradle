@@ -1,0 +1,25 @@
+apply plugin: 'java'
+
+repositories {
+	mavenCentral()
+}
+
+compileJava.sourceCompatibility = 1.5
+compileJava.targetCompatibility = 1.5
+
+println "${System.properties['java.home']}/../lib/tools.jar"
+
+dependencies {
+	compile files("${System.properties['java.home']}/../lib/tools.jar")
+	compile files('lib/jbzip2-0.9.1.jar')
+	compile 'junit:junit:4.11'
+	compile 'org.mortbay.jetty:servlet-api-2.5:6.1H.14.1'
+	compile 'org.swinglabs:swingx:1.6.1'
+}
+
+jar {
+	manifest {
+		attributes 'Main-Class': "org.github.sprofile.AttachToJvm", "Agent-Class": "org.github.sprofile.AgentMain"
+	}
+}
+

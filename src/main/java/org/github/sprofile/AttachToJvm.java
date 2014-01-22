@@ -4,6 +4,7 @@ import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.attach.VirtualMachineDescriptor;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
@@ -24,14 +25,16 @@ public class AttachToJvm {
         System.setProperty(SPROFILE_IGNORE, "true");
 
         if (args.length < 4) {
-            System.out.println("Invalid number of arguments.  Expected path-to-jar, samplePeriod, logFilePath, jvmId1, jvmId2, etc.");
+            System.out.println("Invalid number of arguments.  Expected path-to-jar, samplePeriodInMs, logFilePath, maxLen, maxFiles, jvmId1, jvmId2, etc.");
             System.exit(-1);
         }
 
-        String jarPath = args[0];
+        String jarPath = new File(args[0]).getAbsolutePath();
         int samplePeriod = Integer.parseInt(args[1]);
-        String logFilePath = args[2];
-        Collection<String> jvmIds = new HashSet(Arrays.asList(args).subList(3, args.length));
+        String logFilePath = new File(args[2]).getAbsolutePath();
+        int maxLen = Integer.parseInt(args[3]);
+        int maxFiles = Integer.parseInt(args[4]);
+        Collection<String> jvmIds = new HashSet(Arrays.asList(args).subList(5, args.length));
 
         // get the list of virtual machines accessible
         List<VirtualMachineDescriptor> descs = VirtualMachine.list();
@@ -57,7 +60,7 @@ public class AttachToJvm {
         for (VirtualMachineDescriptor foundDesc : foundDescs) {
             System.out.println("Attaching to vm " + foundDesc.displayName() + " (" + foundDesc.id() + ")");
             VirtualMachine vm = VirtualMachine.attach(foundDesc);
-            vm.loadAgent(jarPath, samplePeriod + "," + listeningPort.getLocalPort() + "," + logFilePath);
+            vm.loadAgent(jarPath, samplePeriod + "," + listeningPort.getLocalPort() + "," + logFilePath+","+maxLen+","+maxFiles);
             vm.detach();
         }
 

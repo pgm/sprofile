@@ -48,7 +48,7 @@ public class ProfilerFactory {
         int fileLengthThreshold = Integer.parseInt(safeGet(props, LOG_LENGTH_THRESHOLD));
         String filenamePrefix = safeGet(props, LOG_FILE_PREFIX);
 
-        Writer writer = new RollingFileWriter(processDescription, fileLengthThreshold, filenamePrefix);
+        Writer writer = new RollingFileWriter(processDescription, fileLengthThreshold, 0, filenamePrefix);
 
         return new Profiler(sleepTime, writer);
     }
