@@ -20,6 +20,16 @@ public class SummaryForm {
     private final Controller controller;
 
     public SummaryForm(Controller controller, List<SummaryTableRow> rows) {
+        if(controller == null) {
+            throw new NullPointerException();
+        }
+        if(rows == null) {
+            throw new NullPointerException();
+        }
+
+        SummaryTableModel model = new SummaryTableModel(rows);
+        table.setModel(model);
+
         this.controller = controller;
         this.rows = rows;
         viewAggregateTimesButton.addActionListener(new ActionListener() {
@@ -55,7 +65,7 @@ public class SummaryForm {
     }
 
     private void createUIComponents() {
-        SummaryTableModel model = new SummaryTableModel(rows);
+        SummaryTableModel model = new SummaryTableModel(new ArrayList<SummaryTableRow>());
         table = new JTable();
         table.setModel(model);
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {

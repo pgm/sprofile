@@ -1,6 +1,14 @@
 package org.github.sprofile;
 
-import java.util.Map;
+import org.github.sprofile.io.SampleListener;
+import org.github.sprofile.io.SamplesParser;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SummarizeProfiles {
     static class Counts {
@@ -9,34 +17,17 @@ public class SummarizeProfiles {
         int children;
         Map<String, Counts> childCounts;
     }
-/*
+
     public static final class SummarizeObservations implements
             SampleListener {
 
-        final static Comparator<Counts> COMPARE_BY_CHILD_COUNT = new Comparator<Counts>() {
-            public int compare(Counts o1, Counts o2) {
-                return -(o1.children - o2.children);
-            }
-        };
-
-        Pattern filter;
-
-        public SummarizeObservations(Pattern filter) {
-            this.filter = filter;
-            this.callTree.childCounts = new HashMap();
-            this.callTree.name = "[root]";
+        @Override
+        public void processDescription(String name) {
+            throw new RuntimeException("unimplemented");
         }
-
-        Map<String, Counts> counts = new HashMap();
-        Counts callTree = new Counts();
 
         @Override
-        public void threadName(long threadId, String name) {
-
-        }
-
-        public void sample(long timestamp, long threadId,
-                            State threadState, StackTraceElement[] trace, Context context) {
+        public void sample(long timestamp, long threadId, Thread.State threadState, StackTraceElement[] trace, Context context) {
 
             if (filter != null) {
                 boolean foundMatch = false;
@@ -75,6 +66,29 @@ public class SummarizeProfiles {
                 get(element).self++;
             }
         }
+
+        final static Comparator<Counts> COMPARE_BY_CHILD_COUNT = new Comparator<Counts>() {
+            public int compare(Counts o1, Counts o2) {
+                return -(o1.children - o2.children);
+            }
+        };
+
+        Pattern filter;
+
+        public SummarizeObservations(Pattern filter) {
+            this.filter = filter;
+            this.callTree.childCounts = new HashMap();
+            this.callTree.name = "[root]";
+        }
+
+        Map<String, Counts> counts = new HashMap();
+        Counts callTree = new Counts();
+
+        @Override
+        public void threadName(long threadId, String name) {
+
+        }
+
 
         private Counts get(StackTraceElement element) {
             String methodName = element.getClassName() + "."
@@ -121,8 +135,7 @@ public class SummarizeProfiles {
             }
         }
     }
- */
-    /*
+
     public static void main(String[] args) throws IOException {
         Pattern filter = null;
         if (args.length > 1) {
@@ -151,5 +164,4 @@ public class SummarizeProfiles {
         }
 
     }
-*/
 }

@@ -22,7 +22,7 @@ public class AgentMain {
 
         int samplingPeriod = Integer.parseInt(args[0]);
         int port = Integer.parseInt(args[1]);
-        String path = args[2];
+        final String path = args[2];
         int maxLen = Integer.parseInt(args[3]);
         int maxFiles = Integer.parseInt(args[4]);
         String processDesc = System.getProperty("sun.java.command");
@@ -43,6 +43,8 @@ public class AgentMain {
 
             Thread thread = new Thread(new Runnable() {
                 public void run() {
+                    System.setProperty(AttachToJvm.SPROFILER_PATH, path);
+
                     // block until we get notification that this stream closed
                     try {
                         int eof = socket.getInputStream().read();
@@ -53,6 +55,9 @@ public class AgentMain {
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     }
+
+                    System.getProperties().remove(AttachToJvm.SPROFILER_PATH);
+
                 }
             });
 
@@ -64,8 +69,5 @@ public class AgentMain {
         }
 
 
-        System.setProperty(AttachToJvm.SPROFILER_PATH, path);
-//        Profiler p = new Profiler(Integer.parseInt(args[0]), path);
-//        p.start();
     }
 }

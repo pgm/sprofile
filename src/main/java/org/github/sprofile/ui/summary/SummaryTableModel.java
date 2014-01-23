@@ -14,6 +14,9 @@ public class SummaryTableModel extends AbstractTableModel {
     final List<SummaryTableRow> rows;
 
     public SummaryTableModel(List<SummaryTableRow> rows) {
+        if(rows == null) {
+            throw new NullPointerException();
+        }
         this.rows = rows;
     }
 

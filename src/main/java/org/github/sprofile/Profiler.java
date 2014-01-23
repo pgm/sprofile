@@ -108,7 +108,7 @@ public class Profiler {
                     break;
                 }
                 try {
-                    System.out.println("Sleeping for "+sleepTime);
+//                    System.out.println("Sleeping for "+sleepTime);
                     this.wait(sleepTime);
                 } catch (InterruptedException ex) {
                     // continue. Wake up may have occurred because process was

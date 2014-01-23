@@ -13,10 +13,10 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class AttachToJvm {
-    public static final String SPROFILE_IGNORE = "sprofile.ignore";
+public class AttachToAllJvms {
+    private static final String SPROFILE_IGNORE = "sprofile.ignore";
 
-    public static final String SPROFILER_PATH = "sprofiler.path";
+    static final String SPROFILER_PATH = "sprofiler.path";
 
     static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd");
 

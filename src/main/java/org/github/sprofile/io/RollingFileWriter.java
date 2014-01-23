@@ -43,7 +43,7 @@ public class RollingFileWriter implements Writer {
     }
 
     protected void cleanUpStaleFiles() {
-        System.out.println("maxFiles = "+maxFiles);
+//        System.out.println("maxFiles = "+maxFiles);
         if(maxFiles <=0)
             return;
 
@@ -51,10 +51,10 @@ public class RollingFileWriter implements Writer {
             @Override
             public boolean accept(File file, String name) {
                 if(name.startsWith(filenamePrefix)) {
-                    System.out.println("hadPrefix: "+file);
+//                    System.out.println("hadPrefix: "+file);
                     Matcher m = datePattern.matcher(name.substring(filenamePrefix.length()));
                     if(m.matches()) {
-                        System.out.println("hadSuffix: "+file);
+//                        System.out.println("hadSuffix: "+file);
                         return true;
                     }
                 }
@@ -66,9 +66,9 @@ public class RollingFileWriter implements Writer {
             Arrays.sort(files);
             // delete until we have at most maxFiles-1
             int nToDelete = files.length - (maxFiles - 1);
-            System.out.println("toDelete "+nToDelete);
+//            System.out.println("toDelete "+nToDelete);
             for(int i=0;i<nToDelete;i++) {
-                System.out.println("Deleting stale log file: "+files[i]);
+//                System.out.println("Deleting stale log file: "+files[i]);
                 files[i].delete();
             }
         }
