@@ -14,15 +14,82 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class AttachToAllJvms {
-    private static final String SPROFILE_IGNORE = "sprofile.ignore";
+    public static List<VirtualMachineDescriptor> pollVms(Set<String> watchedIds) {
+        // get the list of virtual machines accessible
+        List<VirtualMachineDescriptor> newVms = new ArrayList<VirtualMachineDescriptor>();
+        Set<String> latestIds = new HashSet<String>();
 
-    static final String SPROFILER_PATH = "sprofiler.path";
+        List<VirtualMachineDescriptor> descs = VirtualMachine.list();
+        for (VirtualMachineDescriptor desc : descs) {
+            latestIds.add(desc.id());
 
-    static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd");
+            if (!watchedIds.contains(desc.id())) {
+                newVms.add(desc);
+            }
+        }
+
+        // only remember Ids which we've seen recently
+        watchedIds.clear();
+        watchedIds.addAll(latestIds);
+
+        return newVms;
+    }
+
+    public static void startVmPollThread(final String jarPath, final int samplePeriod, final int listeningPort,
+                                         final String logFilePath, final int maxLen, final int maxFiles) {
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Set<String> watchedIds = new HashSet<String>();
+
+                while(true) {
+                    System.out.println("Searching for VMs");
+                    List<VirtualMachineDescriptor> newVMs = pollVms(watchedIds);
+
+                    for (VirtualMachineDescriptor vmDesc : newVMs) {
+                        System.out.println("Attaching to vm " + vmDesc.displayName() + " (" + vmDesc.id() + ")");
+                        watchedIds.add(vmDesc.id());
+
+                        try {
+                            VirtualMachine vm = VirtualMachine.attach(vmDesc);
+                            Properties properties = vm.getSystemProperties();
+                            boolean loadAgent = true;
+                            if(properties.getProperty(AttachToJvm.SPROFILER_PATH) != null) {
+                                System.out.println("VM is already being profiled");
+                                loadAgent = false;
+                            }
+
+                            if(properties.getProperty(AttachToJvm.SPROFILE_IGNORE) != null) {
+                                System.out.println("VM is monitor, so skipping");
+                                loadAgent = false;
+                            }
+
+                            if(loadAgent)
+                                vm.loadAgent(jarPath, samplePeriod + "," + listeningPort + "," + logFilePath+"-"+vm.id()+"-,"+maxLen+","+maxFiles);
+                            vm.detach();
+                        } catch (Exception ex) {
+                            System.err.println("Could not monitor "+vmDesc.id());
+                            ex.printStackTrace();
+                        }
+                    }
+
+                    try {
+                    Thread.sleep(60000);
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            }
+        });
+
+        t.setDaemon(true);
+        t.setName("VM poll");
+        t.start();
+    }
 
     // args are: pid path-to-jar samplePeriod logfile
     public static void main(String[] args) throws Exception {
-        System.setProperty(SPROFILE_IGNORE, "true");
+        System.setProperty(AttachToJvm.SPROFILE_IGNORE, "true");
 
         if (args.length < 4) {
             System.out.println("Invalid number of arguments.  Expected path-to-jar, samplePeriodInMs, logFilePath, maxLen, maxFiles, jvmId1, jvmId2, etc.");
@@ -41,40 +108,18 @@ public class AttachToAllJvms {
         String logFilePath = new File(args[2]).getAbsolutePath();
         int maxLen = Integer.parseInt(args[3]);
         int maxFiles = Integer.parseInt(args[4]);
-        Collection<String> jvmIds = new HashSet(Arrays.asList(args).subList(5, args.length));
 
-        // get the list of virtual machines accessible
-        List<VirtualMachineDescriptor> descs = VirtualMachine.list();
-        Collection<VirtualMachineDescriptor> foundDescs = new ArrayList();
-        for (VirtualMachineDescriptor desc : descs) {
-            if (jvmIds.contains(desc.id())) {
-                foundDescs.add(desc);
-                jvmIds.remove(desc.id());
-            }
-        }
-
-
-        if (jvmIds.size() > 0) {
-            System.out.println("Could not find jvms: " + jvmIds + ".  Use Jps to list java vms and their Ids");
-            System.exit(-1);
-        }
 
         // start a socket which is used to signal that we're still listening
         ServerSocket listeningPort = new ServerSocket(0);
 
-        String hostName = InetAddress.getLocalHost().getHostName();
+        startVmPollThread(jarPath, samplePeriod, listeningPort.getLocalPort(),
+                logFilePath, maxLen, maxFiles);
 
-        for (VirtualMachineDescriptor foundDesc : foundDescs) {
-            System.out.println("Attaching to vm " + foundDesc.displayName() + " (" + foundDesc.id() + ")");
-            VirtualMachine vm = VirtualMachine.attach(foundDesc);
-            vm.loadAgent(jarPath, samplePeriod + "," + listeningPort.getLocalPort() + "," + logFilePath+","+maxLen+","+maxFiles);
-            vm.detach();
-        }
-
-        System.out.println("Sampling...  (Kill this process to stop sampling)");
+        System.out.println("Waiting...  (Kill this process to stop sampling)");
         while (true) {
-            Socket socket = listeningPort.accept();
-            printTextFrom(socket);
+            final Socket socket = listeningPort.accept();
+                    printTextFrom(socket);
         }
     }
 
